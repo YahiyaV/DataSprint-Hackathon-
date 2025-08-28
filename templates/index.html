@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mental Wellness AI Companion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .chat-container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+        }
+        .chat-header {
+            background: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 15px 15px 0 0;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+        .message {
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background: #e3f2fd;
+            margin-left: auto;
+            text-align: right;
+        }
+        .bot-message {
+            background: #f1f8e9;
+            margin-right: auto;
+            text-align: left;
+        }
+        .suggestions {
+            background: #fff3e0;
+            padding: 10px;
+            margin-top: 10px;
+            border-left: 5px solid #ff9800;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            border-radius: 0 0 15px 15px;
+        }
+        #messageInput {
+            flex-grow: 1;
+            padding: 12px 15px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+        }
+        #sendButton {
+            margin-left: 10px;
+            padding: 12px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        #sendButton:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        Mental Wellness AI Companion
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="bot-message message">
+            Hello! I'm here to provide emotional support and help with your mental wellness journey. How are you feeling today?
+        </div>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Share how you're feeling..." maxlength="500">
+        <button id="sendButton">Send</button>
+    </div>
+</div>
+
+<script>
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const chatMessages = document.getElementById('chatMessages');
+
+    function addMessage(content, isUser = false, analysis = null, suggestions = null) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+        messageDiv.textContent = content;
+        chatMessages.appendChild(messageDiv);
+
+        if (analysis && suggestions) {
+            const suggestionsDiv = document.createElement('div');
+            suggestionsDiv.className = 'suggestions';
+            suggestionsDiv.innerHTML = `
+                <strong>Detected Mood:</strong> ${analysis.sentiment} (${(analysis.confidence * 100).toFixed(1)}% confidence) <br/>
+                <strong>Suggestions:</strong><br/>
+                🫁 Breathing: ${suggestions.breathing} <br/>
+                🎵 Music: ${suggestions.music} <br/>
+                🏃 Activity: ${suggestions.activity} <br/>
+                📚 Reading: ${suggestions.reading}
+            `;
+            chatMessages.appendChild(suggestionsDiv);
+        }
+
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, true);
+        messageInput.value = '';
+
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+            const data = await response.json();
+            addMessage(data.response, false, data.analysis, data.suggestions);
+        } catch (error) {
+            addMessage('Sorry, I encountered an error. Please try again.', false);
+            console.error(error);
+        }
+    }
+
+    sendButton.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+
+</body>
+</html>
